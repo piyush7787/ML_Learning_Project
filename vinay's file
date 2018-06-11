@@ -1,0 +1,105 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 28 01:21:50 2018
+
+@author: perolla
+"""
+
+# -*- coding: utf-8 -*-
+import urllib.request as urllib2
+from bs4 import BeautifulSoup
+import pandas as pd
+import html5lib
+
+
+class Extractor():
+    
+    def getSoup(self, url=None):
+        if url is None:
+            return
+        page = urllib2.urlopen(url)
+        soup = BeautifulSoup(page,"lxml")
+        return soup
+
+    def getHrefs(self, url=None, key="a", title=None, name=None):
+        soup = self.getSoup(url=url)
+        if title is not None and name is not None:
+            all_links = soup.find_all(key,title=title,name=name)
+        elif title is not None and name is None:
+            all_links = soup.find_all(key,title=title)
+        elif name is not None:
+            all_links = soup.find_all(key,name=name)
+        all_hrefs = []
+        for link in all_links:
+                href = link.get("href")
+                if href not in all_hrefs:
+                    all_hrefs.append(href)
+        return all_hrefs
+    def divParser(self, div_m=None, keyWord=None, class_=None):
+        all_divs=[]
+        if len(div_m.find_all("div")) == 0:
+            return
+        else:
+            for div in div_m.find_all("div"):
+                all_divs.append(div)
+                self.divParser(div)
+        return all_divs
+                    
+                
+    def run(self):
+        url="https://www.moneycontrol.com/"
+        
+        mf_hrefs = self.getHrefs(url=url,title="Mutual Funds")
+        print("mf link=", mf_hrefs[0])
+        print("\n")
+        #print(self.getHrefs(url=mf_hrefs[0],name="fcat"))
+        #print()
+        '''mc_classes = []
+        for element in self.getSoup(url=url).find_all(class_=True):
+            mc_classes.extend(element["class"])
+            #print(element["class"])
+        print("money control classes: ",len(set(mc_classes)))
+        mf_classes = []
+        for element in self.getSoup(mf_hrefs[0]).find_all(class_=True):
+            mf_classes.extend(element["class"])
+        print("mutual fund classes: ",len(set(mf_classes)))
+            #print(element["class"])
+        print("common classes: ",len(set(mc_classes)&set(mf_classes)))
+        print(set(mc_classes)&set(mf_classes))'''
+        division=None
+        for div in self.getSoup(mf_hrefs[0]).find_all('div', 'MB20 mob-hide'):
+            division=div
+            print("****************")
+        mf_types=[]
+        temp=""
+        tdiv=None
+        for div in self.getSoup(mf_hrefs[0]).find_all("div",class_=True):
+            for select in div.find_all("select"):
+                for option in select.find_all("option",value=True):
+                    if option.getText() == "Select Fund Category":
+                        print("worked")
+                        temp=select
+                        tdiv=div
+                        break
+        for option in temp.find_all("option",value=True):
+            if option.getText() != "Select Fund Category":
+                mf_types.append(option.getText())
+        #print(mf_types)
+        #print(division)
+        print("\n \n \n \n ")
+        '''for div in self.divParser(division):
+            print(div)
+            print("\n****************************\n")'''
+        #print(tdiv.find_all("div",class_=True))
+        
+        
+        
+            #print(div)
+            #print("****************\n")
+        
+        
+                
+        
+        
+testObj=Extractor()
+testObj.run()
