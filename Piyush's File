@@ -1,0 +1,54 @@
+import urllib2
+from bs4 import BeautifulSoup
+import re
+
+class Basic(object):
+    htmlpage = None
+    soup = None
+
+    def __init__(self):
+        print "Creating instance of Basic class"
+
+    def getHTMLPage(self,url):
+        try:
+            self.htmlpage = urllib2.urlopen(url)
+            return self.htmlpage
+        except urllib2.HTTPError, e:
+            print "Unable to able the url {} due to HTTP Error {}".format(url,e.code)
+        except urllib2.URLError, e:
+            print "Unable to open the url {} due to URL Error{}".format(url,e.args)
+
+    def getSoup(self,htmlpage):
+        self.soup = BeautifulSoup(htmlpage, 'lxml')
+        return self.soup
+
+    def soupFind(self,soup,value,**kwargs):
+        if kwargs is not None:
+            keyWordString = ""
+            for key,value in kwargs.iteritems():
+                keyWordString = keyWordString + "{}=\"{}\"".format(key,value)
+            print keyWordString
+            array = soup.find_all(value,keyWordString)
+        else:
+            array = soup.find_all(value)
+        return array
+
+if __name__ == '__main__':
+    object = Basic()
+    url1= "https://www.mutualfundindia.com/"
+    page1 = object.getHTMLPage(url1)
+    soup1 = object.getSoup(page1)
+    data1 = object.soupFind(soup1,"a")
+    #print data1
+    for element in data1:
+        if re.search(r'TopFunds$',element.get("href")):
+            next_url = element.get("href")
+    url2 = url1+next_url.lstrip('/')
+    #print url2
+    page2 = object.getHTMLPage(url2)
+    soup2 = object.getSoup(page2)
+    data2 = object.soupFind(soup2,"a")
+    #print data2
+    for element in data2:
+        if re.search(r'^/MF.*\d+$',str(element.get("href"))):
+            print element.get("href")
